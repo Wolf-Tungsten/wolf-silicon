@@ -89,21 +89,6 @@ class WolfSiliconEnv(object):
             return "*****Process failed without output*****"
 
         if stderr:
-            return f"""# stdout
-
-            ```
-            {stdout}
-            ```
-            # stderr
-
-            ```
-            {stderr}
-            ```"""
+            return f"""# stdout\n```\n{stdout}\n```\n# stderr\n```\n{stderr}\n```"""
         else:
-            return f"""# stdout
-
-            ```
-            {stdout}
-            ```
-            
-            """
+            return f"# stdout\n```\n{stdout}\n```"
