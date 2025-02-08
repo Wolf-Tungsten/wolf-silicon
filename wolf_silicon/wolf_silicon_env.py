@@ -2,6 +2,7 @@ import datetime
 import subprocess
 import threading
 import queue
+import os
 
 class WolfSiliconEnv(object):
     _instance = None
@@ -12,9 +13,12 @@ class WolfSiliconEnv(object):
         return cls._instance
     
     def __init__(self):
-        self._team_log = []
+        pass
 
-    def set_workpath(self, workpath):
+    def create_workspace(self, rootpath):
+        # 在rootpath创建一个以日期时间编号的 wksp_YYYYMMDD_HHMMSS 文件夹
+        workpath = os.path.join(rootpath, f"wksp_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        os.makedirs(workpath)
         self._workpath = workpath
     
     def get_workpath(self):
@@ -22,11 +26,11 @@ class WolfSiliconEnv(object):
 
     def update_log(self, role, message):
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self._team_log.append(f"{role}@{time}: {message}")
+        log = f"{role}@{time}: {message}\n"
+        self.common_write_file("wolf_silicon_log.txt", log, overwrite=False)
     
     def read_log(self):
-        # 截取最后10条日志，拼接成字符串返回
-        return "\n".join(self._team_log[-10:])
+        return self.common_read_file("wolf_silicon_log.txt")[-4*1024:]
     
     def common_write_file(self, filename, content, overwrite=True):
         # 打开 {self._workpath}/{filename}，默认覆盖写入 content

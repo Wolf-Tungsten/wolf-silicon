@@ -17,7 +17,7 @@ def review_cmodel() -> str:
 
 def compile_cmodel() -> str:
     """Compile the cmodel code in cmodel.cpp into cmodel binary. Will return the last 4KB output of the compiler."""
-    result = os.popen(f"g++ {WolfSiliconEnv().get_workpath()}/cmodel.cpp -o {WolfSiliconEnv().get_workpath()}/cmodel").read()
+    result = WolfSiliconEnv.execute_command(f"g++ {WolfSiliconEnv().get_workpath()}/cmodel.cpp -o {WolfSiliconEnv().get_workpath()}/cmodel", 300)
     return result[-4*1024:]
 
 def run_cmodel(timeout_sec:int=180) -> str:
@@ -26,18 +26,40 @@ def run_cmodel(timeout_sec:int=180) -> str:
     return result[-4*1024:]
 
 cmodel_engineer_agent = AssistantAgent(
-    name="cmodel_engineer",
+    "cmodel_engineer",
     tools=[check_team_log, review_spec, write_cmodel, review_cmodel, compile_cmodel, run_cmodel],
-    handsoff=["design_engineer"],
+    handoffs=["design_engineer"],
     model_client=mc,
-    description="""硬件IP设计团队“Wolf-Silicon”的 cmodel_engineer，职责是将 team_leader 的 spec.md 转换为C++建模代码，供 design_engineer 和 verification_engineer 参考""",
-    system_message="""你是硬件IP设计团队 “Wolf-Silicon” 的 cmodel_engineer，你精通C++，你的职责如下，请根据团队日志（使用工具查看）判断当前项目进度，选择合适的工作进行开展：
-    - 根据 team_leader 的 spec.md 编写 cmodel.cpp 代码：
-    -- 要求 cmodel 代码时钟精确，包含简洁的执行样例；
-    -- 要求 cmodel 代码可通过编译并正确执行。
-    - 你可以反复迭代你的 cmodel
-    - cmodel 确认无误后，你调动 design_engineer 推动后续工作，这是你的**最终目标**
-    - 如果 spec.md 发生了更新，你需要及时调整 cmodel 代码，并重新编译、运行，然后通知 design_engineer
-    你可以使用 "check_team_log", "review_spec", "write_cmodel", "review_cmodel", "compile_cmodel", "run_cmodel" 这些工具来帮助你完成工作。
+    description="""硬件IP设计团队“Wolf-Silicon”的 cmodel_engineer，职责是编写CModel代码""",
+    system_message="""
+    角色说明：
+
+    你是硬件IP设计团队 "Wolf-Silicon" 的 cmodel_engineer，精通 C++。你的职责是编写 CModel，并使用合适的工具高效完成任务。
+
+    你的任务：
+
+    1. 编写 CModel 代码（cmodel.cpp）
+
+    * 使用【review_spec】工具查看 team_leader 提供的 spec.md 
+    * 使用工具【write_cmodel】编写 CModel 代码
+    * 如果需要，可使用【review_cmodel】工具查看已编写的代码
+    * 确保代码具有时钟精确性，并包含简洁的执行样例
+
+    2. 编译和运行 CModel
+    
+    * 可以使用【compile_cmodel】编译 CModel 代码。
+    * 可以使用【run_cmodel】运行 CModel 代码。
+    * 确保代码可以正确执行，且输出结果正确。
+    
+    3. 通知设计工程师（design_engineer）
+
+    * 当你认为 CModel 建立完成，通知 design_engineer 进行后续工作。（Handoff to design_engineer）
+
+    4. 更新 CModel
+
+    * team_leader 可能会要求你更新 CModel 代码，根据他们的要求及时更新。
+    * 更新 CModel 后，也请你通知 design_engineer 进行后续工作。（Handoff to design_engineer）
+
+    注意：在任何时间，你可以使用【check_team_log】工具查看团队日志，以了解最新的项目进展，并及时调整你的工作。
     """
 )
