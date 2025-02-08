@@ -12,13 +12,15 @@ from verification_engineer_agent import verification_engineer_agent
 
 from wolf_silicon_env import WolfSiliconEnv
 import asyncio
+import argparse
 
 termination = HandoffTermination(target="user")
 team = Swarm([team_leader_agent, cmodel_engineer_agent, design_engineer_agent, verification_engineer_agent], termination_condition=termination)
 
-async def run_wolf_silicon() -> None:
+async def run_wolf_silicon(user_requirements) -> None:
 
-    user_requirements = input("User: ")
+    if user_requirements is None:
+        user_requirements = input("User Requirements: ")
     if user_requirements == "exit":
         return
     WolfSiliconEnv().common_write_file("user_requirements.md", f"====User==== \n{user_requirements}\n", overwrite=False)
@@ -40,6 +42,13 @@ async def run_wolf_silicon() -> None:
         last_message = task_result.messages[-1]
 
 if __name__ == "__main__":
+    # 设置可选参数 --req 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--req", type=str, help="User requirements file path")
+    args = parser.parse_args()
+    if args.req is not None:
+        with open(args.req, "r") as f:
+            args.req = f.read()
     # 在指定目录下创建工作目录
     WolfSiliconEnv().create_workspace("./playground")
-    asyncio.run(run_wolf_silicon())
+    asyncio.run(run_wolf_silicon(args.req))

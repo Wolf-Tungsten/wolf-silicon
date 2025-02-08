@@ -72,11 +72,15 @@ class WolfSiliconEnv(object):
             # 终止进程
             proc.terminate()
             thread.join()
-            return f"""=====stdout======
+            return f""" # stdout
+            ```
             {stdout}
-            =====stderr======
+            ```
+            # stderr
+            ```
             {stderr}
-            *****Process timed out****"""
+            ```
+            **Process timed out**"""
 
         try:
             # 获取结果
@@ -85,12 +89,21 @@ class WolfSiliconEnv(object):
             return "*****Process failed without output*****"
 
         if stderr:
-            return f"""=====stdout======
+            return f"""# stdout
+
+            ```
             {stdout}
-            =====stderr======
+            ```
+            # stderr
+
+            ```
             {stderr}
-            ================="""
+            ```"""
         else:
-            return f"""=====stdout======
+            return f"""# stdout
+
+            ```
             {stdout}
-            ================="""
+            ```
+            
+            """
