@@ -160,4 +160,5 @@ cython_debug/
 #.idea/
 .DS_Store
 
-./playground
+playground/
+model_client.py
