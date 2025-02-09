@@ -1,91 +1,19 @@
 from model_client import mc
 from wolf_silicon_env import WolfSiliconEnv
 from autogen_agentchat.agents import AssistantAgent
-from project_manager_agent import review_spec
+from project_manager_agent import review_spec, review_cmodel_code, review_design_code 
 from cmodel_engineer_agent import run_cmodel
-from codebase_tool import codebase_tools
-from workspace_state import get_spec_state, get_cmodel_state, get_design_state, get_verification_report_state
+from design_engineer_agent import  write_design_code
 import os
 
-def checkout_task() -> str:
-    spec_exists, spec_mtime = get_spec_state()
-    cmodel_exists, cmodel_mtime = get_cmodel_state()
-    design_exists, design_mtime = get_design_state()
-    verification_report_exists, verification_report_mtime = get_verification_report_state()
+def write_testbench_code(code:str) -> str:
+    """Change testbench code in the tb.sv"""
+    WolfSiliconEnv().common_write_file("tb.sv", code, True)
+    return "Write testbench code into tb.sv successfully."
 
-    if not spec_exists:
-        return """
-        # Project State
-
-        There has no spec.md in the workspace.
-
-        # Something goes wrong
-
-        YOU HAVE TO【transfer_to_project_manager】NOW!
-
-        """
-    
-    if not cmodel_exists or (spec_mtime > cmodel_mtime):
-        return """
-        # Project State
-
-        The cmodel is not exist or outdated.
-        
-        # Something goes wrong
-
-        YOU HAVE TO【transfer_to_project_manager】NOW!
-        """
-    
-    if not design_exists or (cmodel_mtime > design_mtime):
-        return """
-        # Project State
-
-        The design is not exist or outdated.
-        
-        # Something goes wrong
-
-        YOU HAVE TO【transfer_to_project_manager】NOW!
-        """
-    
-    if not verification_report_exists or (design_mtime > verification_report_mtime):
-        return """
-        # Project State
-
-        The verification report is not exist or outdated.
-        
-        # Your Tasks Today
-
-        **Task 1** Use 【review_spec】 to review the design specifications.
-        **Task 2** Use 【list_codebase】(or【view_file】go further) to get any reference code you need, specifically the cmodel and design code.
-        **Task 3 (Optional) ** Use 【run_cmodel】 to run the cmodel.
-        **Task 4** Contribute your testbench code in the codebase.
-            - You can only create or modify .sv/.svh/.v/.vh files in the codebase.
-            - Use codebase tools to edit code, if you don't know how to, Use【codebase_tool_help】.
-        **Task 5** Review your testbench code.
-            - Ensure your testbench use assertions to verify the correctness of the design.
-            - You rely on text log of the testbench to verify the correctness of the design, give yourself a clear signal of pass or fail.
-            - If the code has any issue, you need to return to Task 4.
-        **Task 6** Use 【compile_testbench】 to compile the testbench.
-            - Ensure the compiler output is successful.
-            - If the compiler encounters problems, you need to return to Task 4.
-        **Task 7** Use 【run_testbench】 to run the testbench.
-            - Ensure the code can run correctly. 
-            - If the code fails to run, you need to return to Task 4. 
-            - No matter the testbench pass or fail, you need to write a verification report.
-        **Task 8** Use 【write_verification_report】 to write a verification report.
-        **Task 9** Use 【transfer_to_project_manager】 to notify the project manager to review your verification report.
-        
-        """
-    
-    return """
-    # Project State
-
-    The project is in a well state.
-
-    # Your Tasks Today
-
-    Use 【transfer_to_project_manager】 refer to project manager to move on.
-    """
+def review_testbench_code() -> str:
+    """View the tb.sv file"""
+    return WolfSiliconEnv().common_read_file("tb.sv")
 
 def compile_testbench() -> str:
     """Call Verilator to compile all design and verification files in the codebase into an executable file Vtb, return compiler output (up to 4KB)"""
@@ -93,11 +21,11 @@ def compile_testbench() -> str:
     for file in os.listdir(WolfSiliconEnv().get_workpath()):
         if file.endswith('.v') or file.endswith('.sv'):
             sv_files.append(os.path.join(WolfSiliconEnv().get_workpath(),file))
-    result = WolfSiliconEnv.execute_command(f"verilator --binary --build -Wall --timing {' '.join(sv_files)} --top-module tb -I{WolfSiliconEnv().get_workpath()}  --sv -CFLAGS \"-fcoroutines\" --Mdir {WolfSiliconEnv().get_workpath()}/obj_dir", 300)
+    result = WolfSiliconEnv.execute_command(f"verilator -Wno-TIMESCALEMOD -Wno-DECLFILENAME --binary --build --timing {' '.join(sv_files)} --top-module tb -I{WolfSiliconEnv().get_workpath()}  --sv -CFLAGS \"-fcoroutines\" --Mdir {WolfSiliconEnv().get_workpath()}/obj_dir", 300)
     return result[-4*1024:]
 
 
-def run_testbench(timeout_sec:int=300) -> str:
+def run_testbench(timeout_sec:int=10) -> str:
     """Run the testbench binary. Will return the last 4KB output of the testbench. """
     # 检查是否已经编译
     if not os.path.exists(f"{WolfSiliconEnv().get_workpath()}/obj_dir/Vtb"):
@@ -116,7 +44,7 @@ def write_verification_report(summary:str, overwrite:bool=False) -> str:
 
 verification_engineer_agent = AssistantAgent(
     "verification_engineer",
-    tools=[review_spec, run_cmodel, compile_testbench, run_testbench, write_verification_report, *codebase_tools],
+    tools=[review_spec, review_cmodel_code, run_cmodel, write_design_code, review_design_code, write_testbench_code, compile_testbench, run_testbench, write_verification_report],
     reflect_on_tool_use=True,
     handoffs=["project_manager"],
     model_client=mc,
@@ -129,27 +57,23 @@ verification_engineer_agent = AssistantAgent(
 
     Your Daily Routine:
     1. Use 【review_spec】 to review the design specifications.
-    2. Use 【list_codebase】(or【view_file】go further) to get any reference code you need, specifically the cmodel and design code.
-    3.(Optional) Use 【run_cmodel】 to run the cmodel.
-    4. Contribute your testbench code in the codebase.
-        - You can only create or modify .sv/.svh/.v/.vh files in the codebase.
-        - testbench top module should be named as tb, otherwise compiler will fail.
-        - Use codebase tools to edit code, if you don't know how to, Use【codebase_tool_help】.
-    5. Review your testbench code.
+    2. Use 【review_cmodel_code】 and 【run_cmodel】 to review the cmodel.
+    3. Use 【review_design_code】 to review the current dut.v.
+    4. Contribute your testbench code in the tb.sv.
         - Ensure your testbench use assertions to verify the correctness of the design.
-        - Ensure your top module is named as tb.
         - You rely on text log of the testbench to verify the correctness of the design, give yourself a clear signal of pass or fail.
-        - If the code has any issue, you need to return to Task 4.
-    6. Use 【compile_testbench】 to compile the testbench.
+        - Use 【write_testbench_code】 to write the testbench code into the tb.sv.
+        - At some point, you may need to change the design code to make the testbench pass, Use 【write_design_code】 to update the dut.v.
+    5. Use 【compile_testbench】 to compile the testbench.
         - Ensure the compiler output is successful.
         - You can not change any compiler flags, change your code instead.
         - If the compiler encounters problems, you need to return to Task 4.
-    7. Use 【run_testbench】 to run the testbench.
+    6. Use 【run_testbench】 to run the testbench.
         - Ensure the code can run correctly. 
         - If the code fails to run, you need to return to Task 4. 
         - No matter the testbench pass or fail, you need to write a verification report.
-    8. Use 【write_verification_report】 to write a verification report.
-    9. Use 【transfer_to_project_manager】 to notify the project manager to review your verification report.
+    7. Use 【write_verification_report】 to write a verification report.
+    8. Use 【transfer_to_project_manager】 to notify the project manager to review your verification report.
     
     """
 )
