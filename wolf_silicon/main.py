@@ -29,7 +29,7 @@ async def run_wolf_silicon(user_requirements) -> None:
     last_message = task_result.messages[-1]
 
     while isinstance(last_message, HandoffMessage) and last_message.target == "user":
-        user_requirements = input("User: ")
+        user_requirements = input("User (new requirments or exit): ")
         if user_requirements == "exit":
             return
         WolfSiliconEnv().update_log("user", user_requirements)

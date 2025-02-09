@@ -18,6 +18,7 @@ class WolfSiliconEnv(object):
     def create_workspace(self, rootpath):
         # 在rootpath创建一个以日期时间编号的 wksp_YYYYMMDD_HHMMSS 文件夹
         workpath = os.path.join(rootpath, f"wksp_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        workpath = os.path.abspath(workpath)
         os.makedirs(workpath)
         self._workpath = workpath
     
