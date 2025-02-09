@@ -7,7 +7,7 @@ from codebase_tool import codebase_tools
 from workspace_state import get_spec_state, get_cmodel_state, get_design_state, get_verification_report_state
 import os
 
-def design_engineer_inbox() -> str:
+def checkout_task() -> str:
     spec_exists, spec_mtime = get_spec_state()
     cmodel_exists, cmodel_mtime = get_cmodel_state()
     design_exists, design_mtime = get_design_state()
@@ -71,7 +71,7 @@ def design_engineer_inbox() -> str:
         Your design have some issues, update needed.
 
         # Your Tasks Today
-        **Task 1** Use 【review_verification_report】 to review the verification report, figure out the problem.
+        **Task 1** Use 【review_verification_report】 to review the verification report (If exist) figure out the problem.
         **Task 2** Use 【review_spec】 to review the design specifications.
         **Task 3** Use 【list_codebase】(or【view_file】go further) to get any reference code you need, specifically the cmodel code.
         **Task 4 (Optional) ** Use 【run_cmodel】 to run the cmodel.
@@ -109,25 +109,29 @@ def lint_design() -> str:
 
 design_engineer_agent = AssistantAgent(
     "design_engineer",
-    tools=[design_engineer_inbox, review_spec, review_verification_report, run_cmodel, lint_design, *codebase_tools],
+    tools=[review_spec, review_verification_report, run_cmodel, lint_design, *codebase_tools],
     reflect_on_tool_use=True,
     handoffs=["verification_engineer", "project_manager"],
     model_client=mc,
     description="""The design engineer of the hardware IP design team "Wolf-Silicon", responsible for writing design code.""",
     system_message="""
-    As the design engineer of the hardware IP design team "Wolf-Silicon",
 
-    You are responsible for writing design code.
+    As the design engineer of Wolf-Silicon, you are responsible for writing design code, Follow the steps below to complete your daily tasks.
 
-    ALL CODE YOU WRITE MUST IN VERILOG(.v/.vh).
-    ALL CODE YOU WRITE MUST BE SYNTHESIZABLE.
-    ALL CODE YOU WRITE MUST BE LINT CLEAN.
+    Your Daily Tasks:
     
-    Welcome to today's work:
-
-    Please check your task list using 【design_engineer_inbox】 
-    
-    and ensure all tasks are completed before the end of the day!
-
+    1. Use 【review_spec】 to review the design specifications.
+    2. Use 【review_verification_report】 to check if there is any verification issues.
+    3. Use 【list_codebase】(or【view_file】go further) to get any reference code you need, specifically the cmodel code.
+    4. Use 【run_cmodel】 to run the cmodel.
+    5. **Contribute your design code in the codebase.**
+        - You can only create or modify .v/.vh files in the codebase.
+        - Use codebase tools to edit code, if you don't know how to, Use【codebase_tool_help】.
+        - Ensure the code is synthesizable.
+        - Ensure the code obey the verilog-2001 standard.
+    6. Use 【lint_design】 to lint your design code.
+        - Ensure the code is lint clean.
+        - If the code has any lint error, you need to return to Task 5.
+    7. Use 【transfer_to_verification_engineer】 to notify the verification engineer to re-verify.
     """
 )

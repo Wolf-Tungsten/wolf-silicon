@@ -7,7 +7,7 @@ from codebase_tool import codebase_tools
 from workspace_state import get_spec_state, get_cmodel_state, get_design_state, get_verification_report_state
 import os
 
-def verification_engineer_inbox() -> str:
+def checkout_task() -> str:
     spec_exists, spec_mtime = get_spec_state()
     cmodel_exists, cmodel_mtime = get_cmodel_state()
     design_exists, design_mtime = get_design_state()
@@ -80,11 +80,11 @@ def verification_engineer_inbox() -> str:
     return """
     # Project State
 
-    The project is in a weird state.
+    The project is in a well state.
 
     # Your Tasks Today
 
-    Use 【transfer_to_project_manager】 refer to project manager to check the project state.
+    Use 【transfer_to_project_manager】 refer to project manager to move on.
     """
 
 def compile_testbench() -> str:
@@ -116,25 +116,40 @@ def write_verification_report(summary:str, overwrite:bool=False) -> str:
 
 verification_engineer_agent = AssistantAgent(
     "verification_engineer",
-    tools=[verification_engineer_inbox, review_spec, run_cmodel, compile_testbench, run_testbench, write_verification_report, *codebase_tools],
+    tools=[review_spec, run_cmodel, compile_testbench, run_testbench, write_verification_report, *codebase_tools],
     reflect_on_tool_use=True,
     handoffs=["project_manager"],
     model_client=mc,
     description="""The verification engineer of Wolf-Silicon, responsible for verifying the design and writing verification reports.""",
     system_message="""
-    As the verification engineer of the hardware IP design team "Wolf-Silicon",
+    
+    As the verification engineer of Wolf-Silicon, you are responsible for verifying the design and writing verification reports.
 
-    You are responsible for verifying the design and writing verification reports.
+    Follow the steps below to complete your daily tasks.
 
-    You need to ensure that the design is correct and meets the specifications.
-
-    ALL CODE YOU WRITE MUST IN VERILOG/SYSTEMVERILOG(.v/.vh/.sv/.svh).
-    YOU CAN ONLY GOT TEXT LOG TO VERIFY THE CORRECTNESS OF THE DESIGN.
-    ALWAYS WRITE A VERIFICATION REPORT NO MATTER THE TESTBENCH PASS OR FAIL.
-
-    Welcome to today's work:
-
-    Please check your task list using 【verification_engineer_inbox】 and ensure all tasks are completed before the end of the day!
-
+    Your Daily Routine:
+    1. Use 【review_spec】 to review the design specifications.
+    2. Use 【list_codebase】(or【view_file】go further) to get any reference code you need, specifically the cmodel and design code.
+    3.(Optional) Use 【run_cmodel】 to run the cmodel.
+    4. Contribute your testbench code in the codebase.
+        - You can only create or modify .sv/.svh/.v/.vh files in the codebase.
+        - testbench top module should be named as tb, otherwise compiler will fail.
+        - Use codebase tools to edit code, if you don't know how to, Use【codebase_tool_help】.
+    5. Review your testbench code.
+        - Ensure your testbench use assertions to verify the correctness of the design.
+        - Ensure your top module is named as tb.
+        - You rely on text log of the testbench to verify the correctness of the design, give yourself a clear signal of pass or fail.
+        - If the code has any issue, you need to return to Task 4.
+    6. Use 【compile_testbench】 to compile the testbench.
+        - Ensure the compiler output is successful.
+        - You can not change any compiler flags, change your code instead.
+        - If the compiler encounters problems, you need to return to Task 4.
+    7. Use 【run_testbench】 to run the testbench.
+        - Ensure the code can run correctly. 
+        - If the code fails to run, you need to return to Task 4. 
+        - No matter the testbench pass or fail, you need to write a verification report.
+    8. Use 【write_verification_report】 to write a verification report.
+    9. Use 【transfer_to_project_manager】 to notify the project manager to review your verification report.
+    
     """
 )

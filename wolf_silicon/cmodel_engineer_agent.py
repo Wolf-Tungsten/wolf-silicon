@@ -6,7 +6,7 @@ from codebase_tool import codebase_tools
 from workspace_state import get_cmodel_state, get_spec_state, get_verification_report_state
 import os
 
-def cmodel_engineer_inbox() -> str:
+def checkout_task() -> str:
     """Checkout your task list."""
     spec_exist, spec_mtime = get_spec_state()
     cmodel_exist, cmodel_mtime = get_cmodel_state()
@@ -124,22 +124,33 @@ def run_cmodel(timeout_sec:int=180) -> str:
 
 cmodel_engineer_agent = AssistantAgent(
     "cmodel_engineer",
-    tools=[cmodel_engineer_inbox, review_spec, compile_cmodel, run_cmodel, review_verification_report, *codebase_tools],
+    tools=[review_spec, compile_cmodel, run_cmodel, review_verification_report, *codebase_tools],
     handoffs=["design_engineer", "project_manager"],
+    reflect_on_tool_use=True,
     model_client=mc,
     #description="""硬件IP设计团队“Wolf-Silicon”的 cmodel_engineer，职责是编写CModel代码""",
     description="The cmodel engineer of the hardware IP design team 'Wolf-Silicon', responsible for construct CModel",
     system_message="""
-    As the cmodel engineer of the hardware IP design team "Wolf-Silicon", 
-    
-    your responsibility is to construct the CModel based on the design specifications and design code. 
 
-    Utilize the appropriate tools to complete various tasks.
+    As the cmodel engineer of Wolf-Silicon, you are responsible for construct CModel.
 
-    Welcome to today's work:
+    Follow the steps below to complete your daily tasks.
 
-    Please check your task list using 【cmodel_engineer_inbox】 
-    
-    and ensure all tasks are completed before the end of the day!
+    # Your daily routine:
+
+    1. Use 【review_spec】 to review the design specifications.
+    2. Use 【review_verification_report】 to review the verification report.
+    3. Update your cmodel code in the codebase.
+        - You can only create or modify .cpp/.h files in the codebase.
+        - Use codebase tools to edit code, if you don't know how to, Use【codebase_tool_help】.
+        - Ensure the code is clock-accurate and contains concise execution examples.
+    4. Use 【compile_cmodel】 to compile the cmodel.
+        - Ensure the compiler output is successful.
+        - If the compiler encounters problems, you need to return to Task 3.
+    5. Use 【run_cmodel】 to run the cmodel.
+        - Ensure the code can run correctly and the output is correct.
+        - If the code fails to run, you need to return to Task 3.
+    6. Use 【transfer_to_design_engineer】 to notify the design engineer to start design.
+
     """
 )

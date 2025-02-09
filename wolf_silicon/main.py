@@ -32,7 +32,6 @@ async def run_wolf_silicon(user_requirements) -> None:
         user_requirements = input("User (new requirments or exit): ")
         if user_requirements == "exit":
             return
-        WolfSiliconEnv().update_log("user", user_requirements)
         WolfSiliconEnv().common_write_file("user_requirements.md", f"====Team Leader==== \n{last_message.content}\n", overwrite=False)
         WolfSiliconEnv().common_write_file("user_requirements.md", f"====User==== \n{user_requirements}\n", overwrite=False)
 

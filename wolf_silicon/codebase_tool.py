@@ -39,7 +39,7 @@ def list_codebase() -> str:
     # 获取 path 下所有的文件名，筛选出 .h、.cpp、.v、.sv、.vh、.svh、.md、.txt 文件
     roi_files = []
     for file in os.listdir(path):
-        if file.endswith(('.h', '.cpp', '.v', '.sv', '.vh', '.svh', '.md', '.txt')):
+        if file.endswith(('.h', '.cpp', '.v', '.sv', '.vh', '.svh')):
             roi_files.append(file)
     # 创建一个目录视图
     codebase_view_list.append("# List of Codebase Files")
@@ -61,7 +61,7 @@ def list_codebase() -> str:
         codebase_view_list[0] = "# No file in the codebase"
     return "\n".join(codebase_view_list)
 
-def view_file(file: str, startline: int, endline: int) -> str:
+def view_file_old(file: str, startline: int, endline: int) -> str:
     """ View the specified range [startline, endline) of lines in the file. (Note:linenumber start at 0) """
     if not check_filename_security(file):
         return f"Illegal filename {file} out of codebase"
@@ -85,6 +85,22 @@ def view_file(file: str, startline: int, endline: int) -> str:
     file_list.append(f"Lines {startline} to {endline} of {file} (Total: {amount_of_lines} lines):")
     file_list.append("\n```")
     file_list.extend(target_lines)
+    file_list.append("```\n")
+    return "\n".join(file_list)
+
+def view_file(file: str) -> str:
+    """ View the specified file. """
+    if not check_filename_security(file):
+        return f"Illegal filename {file} out of codebase"
+    file_path = get_absolute_path(file)
+    # 检查文件是否存在
+    if not os.path.exists(file_path):
+        return f"File {file} not found."
+    file_by_line = read_file_line_by_line(file_path)
+    file_list = []
+    file_list.append(f"Content of {file} :")
+    file_list.append("\n```")
+    file_list.extend(file_by_line)
     file_list.append("```\n")
     return "\n".join(file_list)
 
