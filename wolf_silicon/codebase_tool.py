@@ -39,7 +39,7 @@ def list_codebase() -> str:
     # 获取 path 下所有的文件名，筛选出 .h、.cpp、.v、.sv、.vh、.svh、.md、.txt 文件
     roi_files = []
     for file in os.listdir(path):
-        if file.endswith(('.h', '.cpp', '.v', '.sv', '.vh', '.svh')):
+        if file.endswith(('.h', '.cpp', '.v', '.sv', '.vh', '.svh', '.md', '.txt')):
             roi_files.append(file)
     # 创建一个目录视图
     codebase_view_list.append("# List of Codebase Files")
@@ -186,3 +186,5 @@ def search_codebase(keyword: str) -> str:
     if len(codebase_view_list) == 1:
         codebase_view_list[0] = "# No search result found."
     return "\n".join(codebase_view_list)
+
+codebase_tools = [codebase_tool_help, list_codebase, view_file, create_file, overwrite_file, append_to_file, delete_file, search_codebase]

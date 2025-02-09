@@ -5,7 +5,7 @@ from autogen_agentchat.teams import Swarm
 from autogen_agentchat.ui import Console
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
-from team_leader_agent import team_leader_agent
+from project_manager_agent import project_manager_agent
 from cmodel_engineer_agent import cmodel_engineer_agent
 from design_engineer_agent import design_engineer_agent
 from verification_engineer_agent import verification_engineer_agent
@@ -15,7 +15,7 @@ import asyncio
 import argparse
 
 termination = HandoffTermination(target="user")
-team = Swarm([team_leader_agent, cmodel_engineer_agent, design_engineer_agent, verification_engineer_agent], termination_condition=termination)
+team = Swarm([project_manager_agent, cmodel_engineer_agent, design_engineer_agent, verification_engineer_agent], termination_condition=termination)
 
 async def run_wolf_silicon(user_requirements) -> None:
 

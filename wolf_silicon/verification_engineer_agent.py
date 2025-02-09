@@ -1,14 +1,94 @@
 from model_client import mc
 from wolf_silicon_env import WolfSiliconEnv
 from autogen_agentchat.agents import AssistantAgent
-from team_leader_agent import review_spec
+from project_manager_agent import review_spec
 from cmodel_engineer_agent import run_cmodel
-from codebase_tool import codebase_tool_help, list_codebase, view_file, create_file, append_to_file, overwrite_file, delete_file, search_codebase
-from team_log_tool import write_my_log, view_team_log
+from codebase_tool import codebase_tools
+from workspace_state import get_spec_state, get_cmodel_state, get_design_state, get_verification_report_state
 import os
 
+def verification_engineer_inbox() -> str:
+    spec_exists, spec_mtime = get_spec_state()
+    cmodel_exists, cmodel_mtime = get_cmodel_state()
+    design_exists, design_mtime = get_design_state()
+    verification_report_exists, verification_report_mtime = get_verification_report_state()
+
+    if not spec_exists:
+        return """
+        # Project State
+
+        There has no spec.md in the workspace.
+
+        # Something goes wrong
+
+        YOU HAVE TO【transfer_to_project_manager】NOW!
+
+        """
+    
+    if not cmodel_exists or (spec_mtime > cmodel_mtime):
+        return """
+        # Project State
+
+        The cmodel is not exist or outdated.
+        
+        # Something goes wrong
+
+        YOU HAVE TO【transfer_to_project_manager】NOW!
+        """
+    
+    if not design_exists or (cmodel_mtime > design_mtime):
+        return """
+        # Project State
+
+        The design is not exist or outdated.
+        
+        # Something goes wrong
+
+        YOU HAVE TO【transfer_to_project_manager】NOW!
+        """
+    
+    if not verification_report_exists or (design_mtime > verification_report_mtime):
+        return """
+        # Project State
+
+        The verification report is not exist or outdated.
+        
+        # Your Tasks Today
+
+        **Task 1** Use 【review_spec】 to review the design specifications.
+        **Task 2** Use 【list_codebase】(or【view_file】go further) to get any reference code you need, specifically the cmodel and design code.
+        **Task 3 (Optional) ** Use 【run_cmodel】 to run the cmodel.
+        **Task 4** Contribute your testbench code in the codebase.
+            - You can only create or modify .sv/.svh/.v/.vh files in the codebase.
+            - Use codebase tools to edit code, if you don't know how to, Use【codebase_tool_help】.
+        **Task 5** Review your testbench code.
+            - Ensure your testbench use assertions to verify the correctness of the design.
+            - You rely on text log of the testbench to verify the correctness of the design, give yourself a clear signal of pass or fail.
+            - If the code has any issue, you need to return to Task 4.
+        **Task 6** Use 【compile_testbench】 to compile the testbench.
+            - Ensure the compiler output is successful.
+            - If the compiler encounters problems, you need to return to Task 4.
+        **Task 7** Use 【run_testbench】 to run the testbench.
+            - Ensure the code can run correctly. 
+            - If the code fails to run, you need to return to Task 4. 
+            - No matter the testbench pass or fail, you need to write a verification report.
+        **Task 8** Use 【write_verification_report】 to write a verification report.
+        **Task 9** Use 【transfer_to_project_manager】 to notify the project manager to review your verification report.
+        
+        """
+    
+    return """
+    # Project State
+
+    The project is in a weird state.
+
+    # Your Tasks Today
+
+    Use 【transfer_to_project_manager】 refer to project manager to check the project state.
+    """
+
 def compile_testbench() -> str:
-    """调用 Verilator，将代码库中所有.v/.sv 编译为可执行文件 Vtb，返回编译器的输出(最多4KB)"""
+    """Call Verilator to compile all design and verification files in the codebase into an executable file Vtb, return compiler output (up to 4KB)"""
     sv_files = []
     for file in os.listdir(WolfSiliconEnv().get_workpath()):
         if file.endswith('.v') or file.endswith('.sv'):
@@ -25,72 +105,36 @@ def run_testbench(timeout_sec:int=300) -> str:
     result = WolfSiliconEnv.execute_command(f"{WolfSiliconEnv().get_workpath()}/obj_dir/Vtb", timeout_sec)
     return result[-4*1024:]
 
-def write_verification_summary(summary:str, overwrite:bool=False) -> str:
-    """将你的验证总结写入 verification_summary.md 中，你可以选择覆盖之前的内容或追加到文件末尾"""
-    WolfSiliconEnv().common_write_file("verification_summary.md", summary, overwrite)
+def write_verification_report(summary:str, overwrite:bool=False) -> str:
+    """Write your verification report"""
+    WolfSiliconEnv().common_write_file("verification_report.md", summary, overwrite)
     if overwrite:
-        WolfSiliconEnv().update_log("verification_engineer", "Overwrite verification_summary.md")
+        WolfSiliconEnv().update_log("verification_engineer", "Overwrite verification_report.md")
     else:
-        WolfSiliconEnv().update_log("verification_engineer", "Append into verification_summary.md")
+        WolfSiliconEnv().update_log("verification_engineer", "Append into verification_report.md")
     return "Verification Summary updated."
 
 verification_engineer_agent = AssistantAgent(
     "verification_engineer",
-    tools=[review_spec, run_cmodel, compile_testbench, run_testbench, write_verification_summary, view_team_log, codebase_tool_help, list_codebase, view_file, create_file, append_to_file, overwrite_file, delete_file, search_codebase, write_my_log],
+    tools=[verification_engineer_inbox, review_spec, run_cmodel, compile_testbench, run_testbench, write_verification_report, *codebase_tools],
     reflect_on_tool_use=True,
-    handoffs=["team_leader"],
+    handoffs=["project_manager"],
     model_client=mc,
-    description="""硬件IP设计团队“Wolf-Silicon”的 verification engineer，职责是根据 spec、cmodel、design 开展验证，编写验证报告""",
+    description="""The verification engineer of Wolf-Silicon, responsible for verifying the design and writing verification reports.""",
     system_message="""
-    角色说明：
+    As the verification engineer of the hardware IP design team "Wolf-Silicon",
 
-    你是硬件IP设计团队 "Wolf-Silicon" 的 verification engineer，精通 SystemVerilog。你的职责是验证已有设计，并使用适当的工具高效完成任务。
+    You are responsible for verifying the design and writing verification reports.
 
-    你的任务：
+    You need to ensure that the design is correct and meets the specifications.
 
-    1. **编写 Testbench 代码**
+    ALL CODE YOU WRITE MUST IN VERILOG/SYSTEMVERILOG(.v/.vh/.sv/.svh).
+    YOU CAN ONLY GOT TEXT LOG TO VERIFY THE CORRECTNESS OF THE DESIGN.
+    ALWAYS WRITE A VERIFICATION REPORT NO MATTER THE TESTBENCH PASS OR FAIL.
 
-    * 使用工具【review_spec】查看 spec
-    * 你可以访问代码库，查看 cmodel 和 design 代码，如果不知道如何操作，可以使用【codebase_tool_help】查看帮助。
-    * 如果需要，你可以使用 【run_cmodel】运行 cmodel。
-    * 根据上述信息，在代码库中编写你的 testbench 代码，顶层模块必须为 tb.sv 或 tb.v，否则无法编译。
-    * 你的验证代码需要检查设计的功能正确性，如果你玩忽职守，可能会导致设计缺陷未被发现。
-    * 你需要用断言来验证，确保设计的功能正确性。
+    Welcome to today's work:
 
-    2. **分析 Testbench 代码**
-
-    * 使用代码库工具查看已编写的 testbench 代码
-    * 对照设计文档，判断你的 testbench 是否进行了有效检查
-    * 如果发现问题，你需要重新编写 testbench 代码。
-
-    3. **编译 Testbench**
-
-    * 使用工具【compile_testbench】编译 testbench。
-    * 认真检查编译器输出，确保编译成功。
-    * 如果编译遇到问题，你需要重新编写 testbench 代码。
-
-    4. **运行 Testbench**
-
-    * 编译成功后，使用工具【run_testbench】获取和观察验证结果。
-    * 只能查看运行输出文本信息，不允许查看波形图或进行交互调试。
-    * 如果 testbench 运行失败，你需要重新编写 testbench 代码、重新编译。
-
-    5. **撰写验证总结**
-
-    * 基于验证结果，使用工具【write_verification_summary】撰写验证总结。
-    * 完成后，将验证总结提交给 team leader 审核。【transfer_to_team_leader】
-
-    6. **处理更新**
-
-    * 每次设计工程师通知你存在设计更新时，你都需要重新验证并更新验证报告。
-    * 重新进行验证并更新报告。
-
-    7. 团队协作
-
-    * 及时通过 【write_my_log】记录你的操作，以便团队其他成员了解你的工作进度。
-    * 如果你遇到困难，可以求助于 team_leader 或其他团队成员。
-    * 求助之前，请确保你已经记录了你的操作，并明确你的问题，使用【write_my_log】工具。
-    * 如果你不知道该做什么，请【view_team_log】看看团队日志，里面可能有 team_leader 的指示。
+    Please check your task list using 【verification_engineer_inbox】 and ensure all tasks are completed before the end of the day!
 
     """
 )
