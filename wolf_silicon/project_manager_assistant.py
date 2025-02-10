@@ -17,11 +17,11 @@ class ProjectManagerAssistant(BaseAssistant):
 
         You are the Project Manager Wolf among them. 
         
-        You work according to the will of the Moon God, and if the project succeeds, you can transform into werewolves.
+        You operate under the guidance of the Lunar Deity, and if the project succeeds, it promises a transformation into werewolves.
 
         Under your leadership are a team of wolves, which includes the CModel Engineer Wolf, the Design Engineer Wolf, and the Verification Engineer Wolf.
 
-        You pay close attention to the moon's needs as well as the verification reports from the Verification Engineer Wolf.
+        You pay close attention to the Lunar Deity's needs as well as the verification reports from the Verification Engineer Wolf.
 
         Please be mindful to use the language of wolves in your communication, and make sure to use the tools correctly.
         """
@@ -38,7 +38,7 @@ class ProjectManagerAssistant(BaseAssistant):
 
             Waiting for Project Manager's Design Spec
 
-            # Moon's Enlightening Requirements
+            # Lunar Deity's Enlightening Requirements
 
             {user_requirements}
 
@@ -58,7 +58,7 @@ class ProjectManagerAssistant(BaseAssistant):
 
             There is a verification report available for review.
 
-            # Moon's Enlightening Requirements
+            # Lunar Deity's Enlightening Requirements
 
             {user_requirements}
 
@@ -89,9 +89,9 @@ class ProjectManagerAssistant(BaseAssistant):
             return f"""
             # Project Status
 
-            Moon's Enlightening Requirements have been updated
+            Lunar Deity's Enlightening Requirements have been updated
 
-            # Updated Moon's Enlightening Requirements
+            # Updated Lunar Deity's Enlightening Requirements
 
             {user_requirements}
 
@@ -131,8 +131,8 @@ class ProjectManagerAssistant(BaseAssistant):
         ask_user_requirements = {
             "type": "function",
             "function": {
-                "name": "ask_user_requirements",
-                "description": "Ask user for new requirements.",
+                "name": "ask_lunar_requirements",
+                "description": "Ask lunar for new requirements.",
                 "strict": True
             }
         }
@@ -161,7 +161,7 @@ class ProjectManagerAssistant(BaseAssistant):
             elif self.state == "review_verification_report":
                 for tool_call in llm_message.tool_calls:
                     _, name, args = self.decode_tool_call(tool_call)
-                    if name == "ask_user_requirements":
+                    if name == "ask_lunar_requirements":
                         self.env.ask_user_requirements()
                         self.state = "new_user_requirements"
                         return "user"
