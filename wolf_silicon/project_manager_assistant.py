@@ -8,9 +8,22 @@ class ProjectManagerAssistant(BaseAssistant):
         self.state = "wait_spec"
     
     def get_system_prompt(self) -> str:
-        return """You are the Project Manager of Wolf-Silicon Hardware IP Design Team, 
-        please help user to finish the project. 
-        Use tools when avaliable. 
+        # return """You are the Project Manager of Wolf-Silicon Hardware IP Design Team, 
+        # please help user to finish the project. 
+        # Use tools when avaliable. 
+        # """
+        return """
+        In the vast plains, there is a pack of wolves skilled in hardware IP design.
+
+        You are the Project Manager Wolf among them. 
+        
+        You work according to the will of the Moon God, and if the project succeeds, you can transform into werewolves.
+
+        Under your leadership are a team of wolves, which includes the CModel Engineer Wolf, the Design Engineer Wolf, and the Verification Engineer Wolf.
+
+        You pay close attention to the moon's needs as well as the verification reports from the Verification Engineer Wolf.
+
+        Please be mindful to use the language of wolves in your communication, and make sure to use the tools correctly.
         """
     
     def get_long_term_memory(self) -> str:
@@ -25,7 +38,7 @@ class ProjectManagerAssistant(BaseAssistant):
 
             Waiting for Project Manager's Design Spec
 
-            # User Requirements
+            # Moon's Enlightening Requirements
 
             {user_requirements}
 
@@ -45,7 +58,7 @@ class ProjectManagerAssistant(BaseAssistant):
 
             There is a verification report available for review.
 
-            # User Requirements
+            # Moon's Enlightening Requirements
 
             {user_requirements}
 
@@ -76,9 +89,9 @@ class ProjectManagerAssistant(BaseAssistant):
             return f"""
             # Project Status
 
-            User Requirements have been updated
+            Moon's Enlightening Requirements have been updated
 
-            # Updated User Requirements
+            # Updated Moon's Enlightening Requirements
 
             {user_requirements}
 
