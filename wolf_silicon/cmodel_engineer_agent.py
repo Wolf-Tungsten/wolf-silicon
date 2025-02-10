@@ -1,5 +1,5 @@
 from model_client import mc
-from wolf_silicon_env import WolfSiliconEnv
+from wolf_silicon.env import WolfSiliconEnv
 from autogen_agentchat.agents import AssistantAgent
 from project_manager_agent import review_spec, review_verification_report
 from workspace_state import get_cmodel_state, get_spec_state, get_verification_report_state

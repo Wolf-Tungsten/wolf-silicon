@@ -1,5 +1,5 @@
 import os
-from wolf_silicon_env import WolfSiliconEnv
+from wolf_silicon.env import WolfSiliconEnv
 def read_file_line_by_line(path):
     file_by_line = []
     with open(path, "r") as file:

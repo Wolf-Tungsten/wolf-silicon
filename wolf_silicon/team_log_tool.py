@@ -1,4 +1,4 @@
-from wolf_silicon_env import WolfSiliconEnv
+from wolf_silicon.env import WolfSiliconEnv
 
 def write_my_log(role:str, message:str) -> str:
     """Write a log message in the team log."""

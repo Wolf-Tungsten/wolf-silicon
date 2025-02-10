@@ -1,5 +1,5 @@
 import os
-from wolf_silicon_env import WolfSiliconEnv
+from wolf_silicon.env import WolfSiliconEnv
 from typing import Tuple, List
 
 def get_filename_and_mtime_by_ext(ext: List[str]) -> List[Tuple[str, float]]:
