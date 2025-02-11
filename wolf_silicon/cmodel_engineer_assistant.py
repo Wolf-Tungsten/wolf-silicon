@@ -25,7 +25,7 @@ class CModelEngineerAssistant(BaseAssistant):
         """
         
     def get_long_term_memory(self):
-        
+        user_requirements_exist, user_requirements_mtime, user_requirements = self.env.get_user_requirements()
         spec_exist, spec_mtime, spec = self.env.get_spec()
         cmodel_code_exist, cmodel_code_mtime, cmodel_code = self.env.get_cmodel_code()
         verification_report_exist, verification_report_mtime, verification_report = self.env.get_verification_report()
@@ -37,6 +37,10 @@ class CModelEngineerAssistant(BaseAssistant):
 
             Waiting for CModel Engineer Wolf's CModel
 
+            # Lunar Deity's Enlightening Requirements
+
+            {user_requirements}
+
             # Project Manager Wolf's Design Specification
 
             {spec}
@@ -44,6 +48,10 @@ class CModelEngineerAssistant(BaseAssistant):
             # Your Task
 
             Submit a CModel according to the design specification. - Use【submit_cmodel】
+
+            Your CModel should be cycle-accurate and output at least 5 example cases.
+
+            The other team member won't see your code, but only foucs on the output of your CModel.
             """
         else:
             assert(cmodel_code_exist)
@@ -53,28 +61,30 @@ class CModelEngineerAssistant(BaseAssistant):
 
             The CModel is outdated.
 
+            # Lunar Deity's NEW Enlightening Requirements
+
+            {user_requirements}
+
             # Project Manager Wolf's NEW Design Specification
 
             {spec}
-
-            # Your Previous CModel Code
-
-            {cmodel_code}
 
             # Your Previous CModel Output
 
             {self.env.compile_and_run_cmodel()}
 
-            # Verification Report for your Reference
-
-            {verification_report}
-
             # Your Task
 
             Update the CModel according previous materials. - Use【submit_cmodel】
+
+            Your CModel should be cycle-accurate and output at least 5 example cases.
+
+            The other team member won't see your code, but only foucs on the output of your CModel.
+            
             """
     
     def submit_cmodel(self, code):
+        self.env.manual_log(self.name, "提交了 CModel 设计代码")
         self.env.write_cmodel_code(code)
         compile_run_output = self.env.compile_and_run_cmodel()
         return compile_run_output
@@ -153,6 +163,7 @@ class CModelEngineerAssistant(BaseAssistant):
                     cmodel_output = self.submit_cmodel(args["code"])
                     self.reflect_tool_call(tool_id, cmodel_output)
                 elif name == "handover_to_design":
+                    self.env.manual_log(self.name, "将 CModel 交付给设计工程狼")
                     self.state = "cmodel_outdated"
                     return
                 

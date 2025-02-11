@@ -50,9 +50,7 @@ class ProjectManagerAssistant(BaseAssistant):
         elif self.state == "review_verification_report":
             assert (user_requirements_exist)
             assert (spec_exist)
-            assert (user_requirements_mtime < spec_mtime)
             assert (verification_report_exist)
-            assert (verification_report_mtime > spec_mtime)
             return f"""
             # Project Status
 
@@ -74,18 +72,19 @@ class ProjectManagerAssistant(BaseAssistant):
 
             Review the verification report and decide whether to
 
-            1. Approve the verification report and ask user for new requirements - Use【ask_user_requirements】
+            1. Approve the success verification report and ask user for new requirements - Use【ask_user_requirements】
 
             OR
 
-            2. Reject the verification report and add your constructives comment into design spec. - Use【submit_spec】
+            2. Reject the failed verification report and add your constructives comment into design spec. - Use【submit_spec】
+
+            3. Then the other wolves will take action accordingly.
 
             """
         else:
             assert (user_requirements_exist)
             assert (spec_exist)
             assert (verification_report_exist)
-            assert (user_requirements_mtime > spec_mtime)
             return f"""
             # Project Status
 
@@ -98,10 +97,6 @@ class ProjectManagerAssistant(BaseAssistant):
             # Your Out-of-date Spec
 
             {spec}
-
-            # Out-of-date Verification Report
-
-            {verification_report}
 
             # Your Task
 
@@ -155,6 +150,7 @@ class ProjectManagerAssistant(BaseAssistant):
                     tool_id, name, args = self.decode_tool_call(tool_call)
                     if name == "submit_spec":
                         self.env.write_spec(args["spec"], args["overwrite"])
+                        self.env.manual_log(self.name, "提交了设计规格文档")
                         self.reflect_tool_call(tool_id, "success")
                         self.state = "review_verification_report"
                         return "cmodel"
@@ -162,12 +158,13 @@ class ProjectManagerAssistant(BaseAssistant):
                 for tool_call in llm_message.tool_calls:
                     _, name, args = self.decode_tool_call(tool_call)
                     if name == "ask_lunar_requirements":
-                        self.env.ask_user_requirements()
                         self.state = "new_user_requirements"
                         return "user"
                     elif name == "submit_spec":
                         self.env.write_spec(args["spec"], args["overwrite"])
+                        self.env.manual_log(self.name, "更新了设计规格文档")
                         self.state = "review_verification_report"
+                        self.reflect_tool_call(tool_id, "success")
                         return "cmodel" 
 
 

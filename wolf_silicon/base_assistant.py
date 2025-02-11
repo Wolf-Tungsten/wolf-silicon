@@ -7,13 +7,11 @@ class BaseAssistant(object):
         self.name = "BaseAssistant"
         self.agent = agent
         self.short_term_memory = []
-
-    def log(self, msg: str):
-        self.env.log(f"[{self.name}] {msg}")
+        self.max_short_term_memory_len = self.agent.MAX_SHORT_TERM_MEMORY
 
     def update_short_term_memory(self, msg: object):
         self.short_term_memory.append(msg)
-        if len(self.short_term_memory) > self.agent.MAX_SHORT_TERM_MEMORY:
+        if len(self.short_term_memory) > self.max_short_term_memory_len:
             self.short_term_memory.pop(0)
 
     def clear_short_term_memory(self):
@@ -61,7 +59,7 @@ class BaseAssistant(object):
             tool_choice="none"
         )
         self.update_short_term_memory(completion.choices[0].message)
-        print(completion.choices[0].message)
+        self.env.auto_message_log(self.name, completion.choices[0].message)
 
 
     def call_llm(self, user_message, tools_enable):
@@ -87,5 +85,5 @@ class BaseAssistant(object):
             tool_choice="required" if tools_enable else "none"
         )
         self.update_short_term_memory(completion.choices[0].message)
-        print(completion.choices[0].message)
+        self.env.auto_message_log(self.name, completion.choices[0].message)
         return completion.choices[0].message
