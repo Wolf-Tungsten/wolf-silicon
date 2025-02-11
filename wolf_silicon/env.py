@@ -62,6 +62,15 @@ class WolfSiliconEnv(object):
         else:
             return False, 0, "No cmodel code found."
     
+    def delete_cmodel_binary(self):
+        # 删除 {self._cmodel_path}/cmodel
+        if os.path.exists(self._cmodel_binary_path):
+            os.remove(self._cmodel_binary_path)
+    
+    def is_cmodel_binary_exist(self) -> bool:
+        # 判断 {self._cmodel_path}/cmodel 是否存在
+        return os.path.exists(self._cmodel_binary_path)
+    
     def compile_cmodel(self) -> str:
         # 获取 codebase 中所有 .cpp 文件
         cpp_files = []
@@ -76,6 +85,15 @@ class WolfSiliconEnv(object):
         result = WolfSiliconEnv.execute_command(self._cmodel_binary_path, timeout_sec)
         return result[-4*1024:]
     
+    def compile_and_run_cmodel(self):
+        self.delete_cmodel_binary()
+        compiler_output = self.compile_cmodel()
+        if not self.is_cmodel_binary_exist():
+            return f"# No cmodel binary found. Compile failed.\n Here is the compiler output \n{compiler_output}"
+        else:
+            cmodel_output = self.run_cmodel()
+            return f"# CModel compiled successfully. Please review the output from the run. \n{cmodel_output}"
+    
     def write_design_code(self, code:str):
         # 将 design code 写入 {self._design_path}/dut.v, 固定为 overwrite
         with open(self._design_code_path, "w") as f:
@@ -89,6 +107,14 @@ class WolfSiliconEnv(object):
                 return True, mtime, f.read()
         else:
             return False, 0, "No design code found."
+    
+    def lint_design(self) -> str:
+        # 获取 codebase 中所有 .v 文件
+        v_files = []
+        for filename in os.listdir(self._design_path):
+            if filename.endswith('.v'):
+                v_files.append(os.path.join(self._design_path,filename))
+        return WolfSiliconEnv.execute_command(f"verilator -Wno-TIMESCALEMOD -Wno-DECLFILENAME --lint-only {' '.join(v_files)} -I{self._design_path}", 60)
     
     def write_verification_code(self, code:str):
         # 将 verification code 写入 {self._verification_path}/tb.sv, 固定为 overwrite

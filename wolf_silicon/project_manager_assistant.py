@@ -1,9 +1,9 @@
 from base_assistant import BaseAssistant
-import json
 
 class ProjectManagerAssistant(BaseAssistant):
     def __init__(self, agent) -> None:
         super().__init__(agent)
+        self.name = "Project Manager Wolf"
         #State: wait_spec, review_verification_report, new_user_requirements.
         self.state = "wait_spec"
     

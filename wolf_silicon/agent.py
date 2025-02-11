@@ -1,6 +1,8 @@
 from env import WolfSiliconEnv
 import os
 from project_manager_assistant import ProjectManagerAssistant
+from cmodel_engineer_assistant import CModelEngineerAssistant
+from design_engineer_assistant import DesignEngineerAssistant
 from model_client import mc
 
 class WolfSiliconAgent(object):
@@ -11,10 +13,11 @@ class WolfSiliconAgent(object):
         # config
         self.MODEL_NAME = "gpt-4o"
         self.MAX_SHORT_TERM_MEMORY = 10
-        self.workspace_path = workspace_path
+        self.MAX_RETRY = 10
         # connect to model_client
         self.model_client = mc
         # 在 workspace 目录下创建doc、cmodel、design、verification文件夹
+        self.workspace_path = workspace_path
         self.doc_path = os.path.join(workspace_path, "doc")
         self.cmodel_path = os.path.join(workspace_path, "cmodel")
         self.design_path = os.path.join(workspace_path, "design")
@@ -48,8 +51,11 @@ class WolfSiliconAgent(object):
         # 创建 AssistantAgent
         # TODO
         self.project_manager_assistent = ProjectManagerAssistant(self)
+        self.cmodel_engineer_assistant = CModelEngineerAssistant(self)
+        self.design_engineer_assistant = DesignEngineerAssistant(self)
 
     def run(self):
         res = self.project_manager_assistent.execute()
-        if res == "user":
-            return
+        if res == "cmodel":
+            self.cmodel_engineer_assistant.execute()
+            self.design_engineer_assistant.execute()
