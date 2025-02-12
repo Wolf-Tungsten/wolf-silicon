@@ -156,7 +156,7 @@ class ProjectManagerAssistant(BaseAssistant):
                         return "cmodel"
             elif self.state == "review_verification_report":
                 for tool_call in llm_message.tool_calls:
-                    _, name, args = self.decode_tool_call(tool_call)
+                    tool_id, name, args = self.decode_tool_call(tool_call)
                     if name == "ask_lunar_requirements":
                         self.state = "new_user_requirements"
                         return "user"

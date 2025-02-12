@@ -32,6 +32,7 @@ class VerificationEngineerAssistant(BaseAssistant):
         
     def get_long_term_memory(self):
         
+        user_requirements_exist, user_requirements_mtime, user_requirements = self.env.get_user_requirements()
         spec_exist, spec_mtime, spec = self.env.get_spec()
         cmodel_code_exist, cmodel_code_mtime, cmodel_code = self.env.get_cmodel_code()
         design_code_exist, design_code_mtime, design_code = self.env.get_design_code()
@@ -45,6 +46,10 @@ class VerificationEngineerAssistant(BaseAssistant):
             # Project Status
 
             Waiting for Verification Engineer Wolf's Report
+
+            # Lunar Deity's Enlightening Requirements
+
+            {user_requirements}
 
             # Project Manager Wolf's Design Specification
 
@@ -60,11 +65,6 @@ class VerificationEngineerAssistant(BaseAssistant):
 
             {self.env.compile_and_run_cmodel()}
 
-            # Design Engineer Wolf's Verilog Code
-
-            ```
-            {design_code}
-            ```
 
             # Your Task
 
@@ -83,6 +83,10 @@ class VerificationEngineerAssistant(BaseAssistant):
 
             The Verification Report is outdated.
 
+            # Lunar Deity's Enlightening Requirements
+
+            {user_requirements}
+
             # Project Manager Wolf's NEW Design Specification
 
             {spec}
@@ -94,12 +98,6 @@ class VerificationEngineerAssistant(BaseAssistant):
             # CModel Engineer Wolf's NEW CModel Excution Result
 
             {self.env.compile_and_run_cmodel()}
-
-            # Design Engineer Wolf's NEW Verilog Code
-
-            ```
-            {design_code}
-            ```
 
             # Your Task
 
@@ -157,10 +155,11 @@ class VerificationEngineerAssistant(BaseAssistant):
     
     def execute(self):
         self.clear_short_term_memory()
+        self.env.delete_verification_binary()
         self.call_llm("Observe and analyze the project situation, show me your observation and think", tools_enable=False)
 
         while True:
-            if not self.env.is_verification_binary_exist():
+            if (not self.env.is_verification_binary_exist()):
                 llm_message = self.call_llm("""
                     Please submit your Testbench code.
 

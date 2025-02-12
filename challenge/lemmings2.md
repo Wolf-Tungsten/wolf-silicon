@@ -14,3 +14,7 @@ module dut(
     output walk_left,
     output walk_right,
     output aaah ); 
+
+* 请特别注意操作之间的优先级
+  
+* 输入和当前状态决定下一状态，而输出只取决于当前状态

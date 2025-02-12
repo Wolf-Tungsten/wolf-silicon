@@ -33,3 +33,8 @@ I'll will demonstrate behavier of Lemmings in the following table:
 | 9 | 0 | 0 | 1 | 1 || 0 | 0 | 1 | 0 (dig is ignored when falling) |
 | 10 | 0 | 0 | 1 | 0 || 1 | 0 | 0 | 0 |
 | 11 | 0 | 0 | 1 | 0 || 1 | 0 | 0 | 0 |
+
+
+* 请特别注意操作之间的优先级
+  
+* 输入和当前状态决定下一状态，而输出只取决于当前状态

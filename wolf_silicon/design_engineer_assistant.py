@@ -33,6 +33,7 @@ class DesignEngineerAssistant(BaseAssistant):
     def get_long_term_memory(self):
         
         spec_exist, spec_mtime, spec = self.env.get_spec()
+        user_requirements_exist, user_requirements_mtime, user_requirements = self.env.get_user_requirements()
         cmodel_code_exist, cmodel_code_mtime, cmodel_code = self.env.get_cmodel_code()
         design_code_exist, design_code_mtime, design_code = self.env.get_design_code()
         verification_report_exist, verification_report_mtime, verification_report = self.env.get_verification_report()
@@ -45,13 +46,13 @@ class DesignEngineerAssistant(BaseAssistant):
 
             Waiting for Design Engineer Wolf's Design
 
+            # Lunar Deity's Enlightening Requirements
+
+            {user_requirements}
+
             # Project Manager Wolf's Design Specification
 
             {spec}
-
-            # CModel Engineer Wolf's CModel Code
-
-            {cmodel_code}
 
             # CModel Engineer Wolf's CModel Excution Result
 
@@ -71,13 +72,13 @@ class DesignEngineerAssistant(BaseAssistant):
 
             The Design is outdated.
 
+            # Lunar Deity's NEW Enlightening Requirements
+
+            {user_requirements}
+
             # Project Manager Wolf's NEW Design Specification
 
             {spec}
-
-            # CModel Engineer Wolf's NEW CModel Code
-
-            {cmodel_code}
 
             # CModel Engineer Wolf's NEW CModel Excution Result
 

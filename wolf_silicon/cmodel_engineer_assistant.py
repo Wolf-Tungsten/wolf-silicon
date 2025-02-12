@@ -148,13 +148,10 @@ class CModelEngineerAssistant(BaseAssistant):
                 ```
                 {self.env.run_cmodel()}
                 ```
-                Please decide whether to:
+                Is the result match the spec?
                 
-                handover the CModel to the Design Engineer Wolf Use 【handover_to_design】
-                
-                OR
-
-                resubmit the CModel code Use 【submit_cmodel】
+                If Yes: handover the CModel to the Design Engineer Wolf Use 【handover_to_design】
+                If Not: Please resubmit the CModel code Use 【submit_cmodel】
 
                 """, tools_enable=True)
             for tool_call in llm_message.tool_calls:
