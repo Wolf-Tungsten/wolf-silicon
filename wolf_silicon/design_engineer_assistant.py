@@ -54,6 +54,10 @@ class DesignEngineerAssistant(BaseAssistant):
 
             {spec}
 
+            # CModel Engineer Wolf's CModel Code
+
+            {cmodel_code}
+
             # CModel Engineer Wolf's CModel Excution Result
 
             {self.env.compile_and_run_cmodel()}
@@ -79,6 +83,10 @@ class DesignEngineerAssistant(BaseAssistant):
             # Project Manager Wolf's NEW Design Specification
 
             {spec}
+
+            # CModel Engineer Wolf's NEW CModel Code
+
+            {cmodel_code}
 
             # CModel Engineer Wolf's NEW CModel Excution Result
 
